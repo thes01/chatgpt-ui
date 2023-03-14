@@ -1,8 +1,10 @@
 import { error } from '@sveltejs/kit';
 import { ChatGPTAPI } from 'chatgpt';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const api = new ChatGPTAPI({
-    apiKey: import.meta.env.VITE_OPENAPI_KEY
+    apiKey: process.env['OPENAPI_KEY']
 });
  
 /** @type {import('./$types').RequestHandler} */

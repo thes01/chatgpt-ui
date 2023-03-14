@@ -23,6 +23,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"chatgpt": "^5.0.10"
+		"chatgpt": "^5.0.10",
+		"dotenv": "^16.0.3"
 	}
 }
