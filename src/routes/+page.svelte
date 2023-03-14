@@ -1,2 +1,14 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script lang="ts">
+    import "../app.css";
+
+    let resp = "";
+    let prompt = "";
+</script>
+
+<p>Prompt: </p>
+<input type="text" bind:value={prompt} class="border-black border-2 w-full">
+
+<!-- <button on:click={() => getResponse(prompt)}>Submit</button> -->
+
+<h1>Response:</h1>
+<p>{ resp }</p>
