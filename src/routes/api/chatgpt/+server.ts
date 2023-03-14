@@ -1,16 +1,16 @@
 import { error } from '@sveltejs/kit';
 import { ChatGPTAPI } from 'chatgpt';
-// import dotenv from 'dotenv';
-// dotenv.config();
+import fs from 'fs';
+
+const apiKey = fs.readFileSync('./files/openai_key', 'utf-8');
 
 const api = new ChatGPTAPI({
-    apiKey: process.env.OPENAPI_KEY
+    apiKey
 });
  
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {
   const query = url.searchParams.get('query');
-
   if (!query) {
     throw error(400, 'Missing query');
   }
