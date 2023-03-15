@@ -9,7 +9,7 @@ export async function GET({ url }) {
       apiKey
   });
 
-  const query = url.searchParams.get('query');
+  const query = url.searchParams.get('query'); 
   if (!query) {
     throw error(400, 'Missing query');
   }
