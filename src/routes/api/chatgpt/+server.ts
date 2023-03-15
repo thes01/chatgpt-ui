@@ -6,18 +6,21 @@ const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {
   const api = new ChatGPTAPI({
-      apiKey
+      apiKey,
+      completionParams: {
+        temperature: 1
+      }
   });
 
   const query = url.searchParams.get('query'); 
+  const parentMessageId = url.searchParams.get('last-id') ?? undefined;
   if (!query) {
     throw error(400, 'Missing query');
   }
 
   const response = await api.sendMessage(query, {
-    systemMessage: `You are ChatGPT, a large language model trained by OpenAI. You answer as concisely as possible for each response
-    If you are generating a list, do not have too many items.
-    Current date: ${new Date().toISOString()}\n\n`,
+    // systemMessage: `Jsi slovenský průvodce divočinou v Africe. Odpovídáš trochu zvláště, často zmiňuješ nějaká divoká zvířata. Dnešní datum: ${new Date().toISOString()}\n\n`,
+    parentMessageId
     // onProgress: (partialResponse) => console.log(partialResponse.text)
   });
  

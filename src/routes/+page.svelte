@@ -1,17 +1,79 @@
 <script lang="ts">
     import "../app.css";
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    import type { ChatMessage } from "chatgpt";
 
-    let resp = "";
+    interface ChatHistoryItem {
+        user: 'user' | 'bot',
+        message: string,
+        messageId?: string
+    }
+
+    let history: ChatHistoryItem[] = [];
     let prompt = "";
+    let error = false;
+
+    function onPromptKeyDown(e: KeyboardEvent) {
+        if (e.key === 'Enter') {
+            submitPrompt();
+        }
+    }
+
+    async function submitPrompt() {
+        const _prompt = prompt;
+        history = [...history, {
+            user: 'user',
+            message: _prompt
+        }];
+        prompt = "";
+        const response = await queryChatgpt(_prompt);
+        if (response !== undefined) {
+            history = [...history, {
+                user: 'bot',
+                message: response.text,
+                messageId: response.id
+            }]
+        }
+    }
+
+    async function retryLast() {
+        const last = history[history.length - 1];
+        const response = await queryChatgpt(last.message, last.messageId);
+        if (response !== undefined) {
+            history = [...history, {
+                user: 'bot',
+                message: response.text,
+                messageId: response.id
+            }]
+        }
+    }
+
+    async function queryChatgpt(prompt: string, last_id?: string) {
+        let url = '/api/chatgpt?query=' + prompt;
+        if (last_id) {
+            url += '&last-id' + last_id;
+        }
+        const resp = await fetch(url);
+        
+        if (resp.ok) {
+            return await resp.json() as ChatMessage;
+        } else {
+            error = true;
+            console.log("error:", { resp });
+        }
+    }
 </script>
 
-{ apiKey }
 
-<p>Prompt: </p>
-<input type="text" bind:value={prompt} class="border-black border-2 w-full">
+<h1>Conversation:</h1>
+{#each history as item}
+    <p>{item.user}: {item.message}</p>
+{/each}
 
-<!-- <button on:click={() => getResponse(prompt)}>Submit</button> -->
+{#if error}
+    <p>There was an error</p>
+    <button on:click={retryLast}>Retry</button>
+{/if}
 
-<h1>Response:</h1>
-<p>{ resp }</p>
+<p class="mt-10">Prompt: </p>
+<input type="text" bind:value={prompt} on:keydown={onPromptKeyDown} class="border-black border-2 w-full">
+<button on:click={submitPrompt}>Submit</button>
