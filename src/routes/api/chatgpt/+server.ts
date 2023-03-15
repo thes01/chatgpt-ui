@@ -1,8 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { ChatGPTAPI } from 'chatgpt';
-import fs from 'fs';
 
-const apiKey = fs.readFileSync('./files/openai_key', 'utf-8');
+const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
 const api = new ChatGPTAPI({
     apiKey
