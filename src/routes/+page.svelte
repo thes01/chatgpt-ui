@@ -11,6 +11,7 @@
     let history: ChatHistoryItem[] = [];
     let prompt = "";
     let error = false;
+    let last_bot_id: string | undefined;
 
     function onPromptKeyDown(e: KeyboardEvent) {
         if (e.key === 'Enter') {
@@ -25,41 +26,62 @@
             message: _prompt
         }];
         prompt = "";
-        const response = await queryChatgpt(_prompt);
-        if (response !== undefined) {
-            history = [...history, {
-                user: 'bot',
-                message: response.text,
-                messageId: response.id
-            }]
-        }
+
+        await queryChatgpt(_prompt, last_bot_id, (message) => {
+            if (history[history.length - 1].messageId === message.id) {
+                history[history.length - 1].message = message.text;
+            } else {
+                history = [...history, {
+                    user: 'bot',
+                    message: message.text,
+                    messageId: message.id
+                }]
+                last_bot_id = message.id;
+            }
+        });
     }
 
     async function retryLast() {
-        const last = history[history.length - 1];
-        const response = await queryChatgpt(last.message, last.messageId);
-        if (response !== undefined) {
-            history = [...history, {
-                user: 'bot',
-                message: response.text,
-                messageId: response.id
-            }]
-        }
+        // const last = history[history.length - 1];
+        // const response = await queryChatgpt(last.message, last.messageId);
+        // if (response !== undefined) {
+        //     history = [...history, {
+        //         user: 'bot',
+        //         message: response.text,
+        //         messageId: response.id
+        //     }]
+        // }
     }
 
-    async function queryChatgpt(prompt: string, last_id?: string) {
+    async function queryChatgpt(prompt: string, last_id?: string, on_update?: (resp: ChatMessage) => void) {
         let url = '/api/chatgpt?query=' + prompt;
         if (last_id) {
             url += '&last-id' + last_id;
         }
-        const resp = await fetch(url);
-        
-        if (resp.ok) {
-            return await resp.json() as ChatMessage;
-        } else {
-            error = true;
-            console.log("error:", { resp });
+        const ac = new AbortController();
+        const signal = ac.signal;
+
+        const response = await fetch(url, { signal });
+        const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
+
+        while (true && reader !== undefined) {
+            const { value, done } = await reader.read();
+            try {
+                const resp = JSON.parse(value ?? '') as ChatMessage;
+                if (on_update) {
+                    on_update(resp);
+                }
+            } catch {
+            }
+            if (done) break;
         }
+        
+        // if (resp.ok) {
+        //     return await resp.json() as ChatMessage;
+        // } else {
+        //     error = true;
+        //     console.log("error:", { resp });
+        // }
     }
 </script>
 

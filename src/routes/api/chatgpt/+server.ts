@@ -18,11 +18,23 @@ export async function GET({ url }) {
     throw error(400, 'Missing query');
   }
 
-  const response = await api.sendMessage(query, {
-    // systemMessage: `Jsi slovenský průvodce divočinou v Africe. Odpovídáš trochu zvláště, často zmiňuješ nějaká divoká zvířata. Dnešní datum: ${new Date().toISOString()}\n\n`,
-    parentMessageId
-    // onProgress: (partialResponse) => console.log(partialResponse.text)
+  const readable = new ReadableStream({
+		async start(ctr) {
+      await api.sendMessage(query, { parentMessageId, onProgress: (partialResponse) => {
+        let str = JSON.stringify(partialResponse);
+        ctr.enqueue(`${str}\n\n`);
+      }});
+
+      ctr.close();
+		},
+		cancel() {
+			console.log('cancel');
+		}
+	});
+
+	return new Response(readable, {
+		headers: {
+			'content-type': 'text/event-stream',
+		}
   });
- 
-  return new Response(JSON.stringify(response));
 }
