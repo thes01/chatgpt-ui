@@ -1,6 +1,8 @@
 <script lang="ts">
     import "../app.css";
+
     import type { ChatMessage } from "chatgpt";
+    import SvelteMarkdown from "svelte-markdown";
 
     interface ChatHistoryItem {
         user: 'user' | 'bot',
@@ -8,7 +10,8 @@
         messageId?: string
     }
 
-    let history: ChatHistoryItem[] = [];
+    let history: ChatHistoryItem[] = [
+    ];
     let prompt = "";
     let error = false;
     let last_bot_id: string | undefined;
@@ -56,7 +59,7 @@
     async function queryChatgpt(prompt: string, last_id?: string, on_update?: (resp: ChatMessage) => void) {
         let url = '/api/chatgpt?query=' + prompt;
         if (last_id) {
-            url += '&last-id' + last_id;
+            url += '&last-id=' + last_id;
         }
         const ac = new AbortController();
         const signal = ac.signal;
@@ -85,17 +88,37 @@
     }
 </script>
 
-
-<h1>Conversation:</h1>
-{#each history as item}
-    <p>{item.user}: {item.message}</p>
-{/each}
-
 {#if error}
     <p>There was an error</p>
     <button on:click={retryLast}>Retry</button>
 {/if}
 
-<p class="mt-10">Prompt: </p>
-<input type="text" bind:value={prompt} on:keydown={onPromptKeyDown} class="border-black border-2 w-full">
-<button on:click={submitPrompt}>Submit</button>
+<h1 class="text-xl mb-3">Konverzace s chatbotem</h1>
+{#each history as item}
+    <div class="flex prose prose-p:text-left -my-5">
+        <div class="w-20 shrink-0">
+            {#if item.user === 'user'}
+                <p>Uživatel</p>
+            {:else}
+                <p>Chatbot</p>
+            {/if}
+        </div>
+        <div>
+            <SvelteMarkdown source={item.message}></SvelteMarkdown>
+        </div>
+    </div>
+{/each}
+
+<p class="mt-10">Váš dotaz: </p>
+
+<div class="flex">
+    <span 
+        class="input border-black border-2 w-full mr-2" 
+        role="textbox" 
+        contenteditable bind:innerHTML={prompt}>
+            
+    </span>
+    <!-- <textarea bind:value={prompt} class="border-black border-2 w-full mr-2"></textarea> -->
+    <button on:click={submitPrompt} class="p-4 bg-gray-200">OK</button>
+</div>
+

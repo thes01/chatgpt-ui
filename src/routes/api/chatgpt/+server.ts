@@ -8,8 +8,10 @@ export async function GET({ url }) {
   const api = new ChatGPTAPI({
       apiKey,
       completionParams: {
-        temperature: 1
-      }
+        temperature: 1,
+        // model: 'gpt-4'
+      },
+      
   });
 
   const query = url.searchParams.get('query'); 
@@ -17,6 +19,8 @@ export async function GET({ url }) {
   if (!query) {
     throw error(400, 'Missing query');
   }
+
+  // console.log({ query, parentMessageId });
 
   const readable = new ReadableStream({
 		async start(ctr) {
